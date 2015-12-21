@@ -69,13 +69,13 @@ img {
 <p>Devices such as Jawbone Up, Nike FuelBand, and Fitbit are equipped with accelerometers. Using these devices, it is now possible to collect a large amount of data about personal activity relatively inexpensively. This report uses a dataset collected from the accelerometers to determine whether personal activities are performed correctly. The goal is to investigate a best machine learning algorithm to predict how well the pseronal activities are performed.</p>
 <p>This investigation started with data cleansing to remove NA values from the training dataset and then prelimanary feature selection to remove near-zero values, which led in a reduction of the number of features from 159 to 53 as a result.</p>
 <p>The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency. An outlier observation was identified and removed from the dataset as a result. Also, the analysis indicates high dependecies among features.</p>
-<p>Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources. The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis. The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.63, respectively.</p>
+<p>Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources. The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis. The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.64, respectively.</p>
 </div>
 <div id="data-cleansing" class="section level2">
 <h2>Data Cleansing</h2>
 <p>The data used in this report are collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
 <p>It is noticed that some features in the dataaet contain more than 97% of the observations with NA values. The features containing such high percentage of NA values are not useful for machine learning. These features are removed from the data frame using the following R statements. With the removal, the updated dataset contains no NA values and no data imputation is required as a result.</p>
-<pre class="r"><code>dat = read.csv(&quot;C:/Users/Huili/Downloads/pml-training.csv&quot;)
+<pre class="r"><code>dat = read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;)
 namat &lt;- is.na(dat)
 navec &lt;- apply(namat,2,sum)
 navec &lt;- navec / nrow(dat)
@@ -308,7 +308,7 @@ ldaPcaFit</code></pre>
 ## [46] &quot;gyros_forearm_y&quot;      &quot;gyros_forearm_z&quot;      &quot;accel_forearm_x&quot;     
 ## [49] &quot;accel_forearm_y&quot;      &quot;accel_forearm_z&quot;      &quot;magnet_forearm_x&quot;    
 ## [52] &quot;magnet_forearm_y&quot;     &quot;magnet_forearm_z&quot;</code></pre>
-<p>The prediction model has accuracy and kappa with the value of 0.71 and 0.63, respectively. The cross-validation accuracy is 0.71. In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.</p>
+<p>The prediction model has accuracy and kappa with the value of 0.71 and 0.64, respectively. The cross-validation accuracy is 0.71. In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.</p>
 </div>
 </div>
 

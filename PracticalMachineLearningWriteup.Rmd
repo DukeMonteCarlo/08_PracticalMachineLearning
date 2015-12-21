@@ -9,7 +9,7 @@ This investigation started with data cleansing to remove NA values from the trai
 
 The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency.  An outlier observation was identified and removed from the dataset as a result.  Also, the analysis indicates high dependecies among features.
 
-Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis.  The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.63, respectively.
+Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis.  The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.64, respectively.
 
 ## Data Cleansing ##
 The data used in this report are collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.  They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
@@ -17,7 +17,7 @@ The data used in this report are collected from accelerometers on the belt, fore
 It is noticed that some features in the dataaet contain more than 97% of the observations with NA values.  The features containing such high percentage of NA values are not useful for machine learning. These features are removed from the data frame using the following R statements.  With the removal, the updated dataset contains no NA values and no data imputation is required as a result.
 
 ```{r}
-dat = read.csv("C:/Users/Huili/Downloads/pml-training.csv")
+dat = read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
 namat <- is.na(dat)
 navec <- apply(namat,2,sum)
 navec <- navec / nrow(dat)
@@ -145,4 +145,4 @@ The analysis performed in this report suggests the linear discriminant analysis 
 names(datTidy[,colnames(datTidy) != 'classe'])
 ```
 
-The prediction model has accuracy and kappa with the value of 0.71 and 0.63, respectively.  The cross-validation accuracy is 0.71.  In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.
+The prediction model has accuracy and kappa with the value of 0.71 and 0.64, respectively.  The cross-validation accuracy is 0.71.  In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.
