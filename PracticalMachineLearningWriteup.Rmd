@@ -9,7 +9,7 @@ This investigation started with data cleansing to remove NA values from the trai
 
 The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency.  An outlier observation was identified and removed from the dataset as a result.  Also, the analysis indicates high dependecies among features.
 
-Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis.  The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.64, respectively.
+Based on the result of the exploratory analysis, a prectitive model is built which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The prection model uses the random forest method with a value of the tuning parameter *mtry* equal to 8.  The number of features used to build the model is 53.  The model accuracy and kappa are 0.999 and 0.998, respectively.
 
 ## Data Cleansing ##
 The data used in this report are collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.  They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
@@ -123,20 +123,17 @@ plot(prComp$sdev, ylab="Standard Deviation")
 The plot of standard deviation versus component index suggests that the number of principal components to use for machine training is much less that the number of features.
 
 ## Predictive Modeling ##
-The exploratory analysis only touches few aspects of the data.  The characteristics of the data are not fully explored.  Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model.  However, the non-parametric approaches are computationally expensive.  With limited computational resources available for this investigation, the linear discrimant analysis is used for predictive modeling.
+The exploratory analysis only touches few aspects of the data.  The characteristics of the data are not fully explored.  Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model.
 
-Linear discrimenant analyses with and without principal component analysis are performed and the result of the analyses is given in the following
+The Random Forest method is performed and the result of the modeling is given in the following
 ```{r}
 set.seed(340091)
-ldaFit <- train(classe~.,method="lda",data=datTidy,trControl=trainControl(method="repeatedcv",savePredictions = TRUE))
-ldaFit
-confusionMatrix(ldaFit$pred$pred,ldaFit$pred$obs)
-ldaPcaFit <- train(classe~.,method="lda",data=datTidy,preProcess="pca",trControl=trainControl(method="repeatedcv",savePredictions = TRUE))
-ldaPcaFit
-confusionMatrix(ldaPcaFit$pred$pred,ldaFit$pred$obs)
+rfFit <- train(classe~.,method="rf",data=datTidy,trControl=trainControl(p=0.5,method="cv",savePredictions = TRUE),tuneGrid=data.frame(mtry=8))
+rfFit
+confusionMatrix(rfFit$pred$pred,rfFit$pred$obs)
 ```
 
-The linear discriminant analysis without principal compoent analysis appear to be better than the one with principal component analysis in terms of both accuracy and kappa.
+The computation time to build the model is about 12 minutes on my laptop computer with Intel CORE i5 running Windows 10.
 
 ## Conclusion ##
 The analysis performed in this report suggests the linear discriminant analysis method for machine learning for predicting personal activities in the computational environment with limited resources.  The method uses the following features to predict the *classe* outcome variables
@@ -145,4 +142,4 @@ The analysis performed in this report suggests the linear discriminant analysis 
 names(datTidy[,colnames(datTidy) != 'classe'])
 ```
 
-The prediction model has accuracy and kappa with the value of 0.71 and 0.64, respectively.  The cross-validation accuracy is 0.71.  In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.
+The prediction model has accuracy and kappa with the value of 0.999 and 0.998, respectively.  The cross-validation accuracy is 0.999.  In other words, the cross-validation error rate is 0.001, which is an estimate of out-of-sample error rate.

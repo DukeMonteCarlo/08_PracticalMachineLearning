@@ -69,7 +69,7 @@ img {
 <p>Devices such as Jawbone Up, Nike FuelBand, and Fitbit are equipped with accelerometers. Using these devices, it is now possible to collect a large amount of data about personal activity relatively inexpensively. This report uses a dataset collected from the accelerometers to determine whether personal activities are performed correctly. The goal is to investigate a best machine learning algorithm to predict how well the pseronal activities are performed.</p>
 <p>This investigation started with data cleansing to remove NA values from the training dataset and then prelimanary feature selection to remove near-zero values, which led in a reduction of the number of features from 159 to 53 as a result.</p>
 <p>The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency. An outlier observation was identified and removed from the dataset as a result. Also, the analysis indicates high dependecies among features.</p>
-<p>Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources. The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis. The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.64, respectively.</p>
+<p>Based on the result of the exploratory analysis, a prectitive model is built which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources. The prection model uses the random forest method with a value of the tuning parameter <em>mtry</em> equal to 8. The number of features used to build the model is 53. The model accuracy and kappa are 0.999 and 0.998, respectively.</p>
 </div>
 <div id="data-cleansing" class="section level2">
 <h2>Data Cleansing</h2>
@@ -181,110 +181,63 @@ plot(prComp$sdev, ylab=&quot;Standard Deviation&quot;)</code></pre>
 </div>
 <div id="predictive-modeling" class="section level2">
 <h2>Predictive Modeling</h2>
-<p>The exploratory analysis only touches few aspects of the data. The characteristics of the data are not fully explored. Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model. However, the non-parametric approaches are computationally expensive. With limited computational resources available for this investigation, the linear discrimant analysis is used for predictive modeling.</p>
-<p>Linear discrimenant analyses with and without principal component analysis are performed and the result of the analyses is given in the following</p>
+<p>The exploratory analysis only touches few aspects of the data. The characteristics of the data are not fully explored. Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model.</p>
+<p>The Random Forest method is performed and the result of the modeling is given in the following</p>
 <pre class="r"><code>set.seed(340091)
-ldaFit &lt;- train(classe~.,method=&quot;lda&quot;,data=datTidy,trControl=trainControl(method=&quot;repeatedcv&quot;,savePredictions = TRUE))</code></pre>
-<pre><code>## Loading required package: MASS</code></pre>
-<pre class="r"><code>ldaFit</code></pre>
-<pre><code>## Linear Discriminant Analysis 
+rfFit &lt;- train(classe~.,method=&quot;rf&quot;,data=datTidy,trControl=trainControl(p=0.5,method=&quot;cv&quot;,savePredictions = TRUE),tuneGrid=data.frame(mtry=8))</code></pre>
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-12
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="r"><code>rfFit</code></pre>
+<pre><code>## Random Forest 
 ## 
 ## 19621 samples
 ##    53 predictor
 ##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## No pre-processing
-## Resampling: Cross-Validated (10 fold, repeated 1 times) 
+## Resampling: Cross-Validated (10 fold) 
 ## Summary of sample sizes: 17659, 17658, 17659, 17658, 17661, 17659, ... 
 ## Resampling results
 ## 
-##   Accuracy   Kappa      Accuracy SD  Kappa SD  
-##   0.7132677  0.6371692  0.01243499   0.01577119
+##   Accuracy  Kappa      Accuracy SD  Kappa SD    
+##   0.998522  0.9981305  0.000738517  0.0009341847
 ## 
+## Tuning parameter 'mtry' was held constant at a value of 8
 ## </code></pre>
-<pre class="r"><code>confusionMatrix(ldaFit$pred$pred,ldaFit$pred$obs)</code></pre>
+<pre class="r"><code>confusionMatrix(rfFit$pred$pred,rfFit$pred$obs)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 4606  528  338  178  151
-##          B  164 2471  321  132  523
-##          C  368  493 2266  405  326
-##          D  419  145  401 2383  338
-##          E   22  160   96  118 2269
+##          A 5579    4    0    0    0
+##          B    0 3791    5    0    0
+##          C    0    2 3417   13    0
+##          D    0    0    0 3202    4
+##          E    0    0    0    1 3603
 ## 
 ## Overall Statistics
-##                                           
-##                Accuracy : 0.7133          
-##                  95% CI : (0.7069, 0.7196)
-##     No Information Rate : 0.2843          
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
-##                                           
-##                   Kappa : 0.6372          
-##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+##                                          
+##                Accuracy : 0.9985         
+##                  95% CI : (0.9979, 0.999)
+##     No Information Rate : 0.2843         
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+##                                          
+##                   Kappa : 0.9981         
+##  Mcnemar's Test P-Value : NA             
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.8256   0.6508   0.6622   0.7410   0.6291
-## Specificity            0.9149   0.9280   0.9017   0.9206   0.9753
-## Pos Pred Value         0.7940   0.6843   0.5874   0.6465   0.8514
-## Neg Pred Value         0.9296   0.9172   0.9267   0.9477   0.9211
+## Sensitivity            1.0000   0.9984   0.9985   0.9956   0.9989
+## Specificity            0.9997   0.9997   0.9991   0.9998   0.9999
+## Pos Pred Value         0.9993   0.9987   0.9956   0.9988   0.9997
+## Neg Pred Value         1.0000   0.9996   0.9997   0.9991   0.9998
 ## Prevalence             0.2843   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2347   0.1259   0.1155   0.1215   0.1156
-## Detection Prevalence   0.2957   0.1840   0.1966   0.1879   0.1358
-## Balanced Accuracy      0.8702   0.7894   0.7820   0.8308   0.8022</code></pre>
-<pre class="r"><code>ldaPcaFit &lt;- train(classe~.,method=&quot;lda&quot;,data=datTidy,preProcess=&quot;pca&quot;,trControl=trainControl(method=&quot;repeatedcv&quot;,savePredictions = TRUE))
-ldaPcaFit</code></pre>
-<pre><code>## Linear Discriminant Analysis 
-## 
-## 19621 samples
-##    53 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction (53), centered
-##  (53), scaled (53) 
-## Resampling: Cross-Validated (10 fold, repeated 1 times) 
-## Summary of sample sizes: 17660, 17658, 17658, 17658, 17658, 17661, ... 
-## Resampling results
-## 
-##   Accuracy   Kappa      Accuracy SD  Kappa SD   
-##   0.5383519  0.4156727  0.006975869  0.009243005
-## 
-## </code></pre>
-<pre class="r"><code>confusionMatrix(ldaPcaFit$pred$pred,ldaFit$pred$obs)</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction    A    B    C    D    E
-##          A 3707  739  800  233  354
-##          B  405 1701  345  507  677
-##          C  517  708 1891  518  493
-##          D  783  400  280 1612  450
-##          E  167  249  106  346 1633
-## 
-## Overall Statistics
-##                                           
-##                Accuracy : 0.5374          
-##                  95% CI : (0.5304, 0.5444)
-##     No Information Rate : 0.2843          
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
-##                                           
-##                   Kappa : 0.4145          
-##  Mcnemar's Test P-Value : &lt; 2.2e-16       
-## 
-## Statistics by Class:
-## 
-##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.6645  0.44799  0.55260  0.50124  0.45273
-## Specificity            0.8486  0.87778  0.86197  0.88339  0.94580
-## Pos Pred Value         0.6355  0.46795  0.45820  0.45730  0.65294
-## Neg Pred Value         0.8642  0.86889  0.90119  0.90035  0.88470
-## Prevalence             0.2843  0.19352  0.17440  0.16391  0.18383
-## Detection Rate         0.1889  0.08669  0.09638  0.08216  0.08323
-## Detection Prevalence   0.2973  0.18526  0.21034  0.17965  0.12747
-## Balanced Accuracy      0.7565  0.66288  0.70728  0.69232  0.69926</code></pre>
-<p>The linear discriminant analysis without principal compoent analysis appear to be better than the one with principal component analysis in terms of both accuracy and kappa.</p>
+## Detection Rate         0.2843   0.1932   0.1742   0.1632   0.1836
+## Detection Prevalence   0.2845   0.1935   0.1749   0.1634   0.1837
+## Balanced Accuracy      0.9999   0.9991   0.9988   0.9977   0.9994</code></pre>
+<p>The computation time to build the model is about 12 minutes on my laptop computer with Intel CORE i5 running Windows 10.</p>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
@@ -308,7 +261,7 @@ ldaPcaFit</code></pre>
 ## [46] &quot;gyros_forearm_y&quot;      &quot;gyros_forearm_z&quot;      &quot;accel_forearm_x&quot;     
 ## [49] &quot;accel_forearm_y&quot;      &quot;accel_forearm_z&quot;      &quot;magnet_forearm_x&quot;    
 ## [52] &quot;magnet_forearm_y&quot;     &quot;magnet_forearm_z&quot;</code></pre>
-<p>The prediction model has accuracy and kappa with the value of 0.71 and 0.64, respectively. The cross-validation accuracy is 0.71. In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.</p>
+<p>The prediction model has accuracy and kappa with the value of 0.999 and 0.998, respectively. The cross-validation accuracy is 0.999. In other words, the cross-validation error rate is 0.001, which is an estimate of out-of-sample error rate.</p>
 </div>
 </div>
 
