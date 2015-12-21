@@ -1,0 +1,148 @@
+# Machine Learning for Prediction of Personal Activities #
+
+*Author: Huili Wang*
+
+## Overview ##
+Devices such as Jawbone Up, Nike FuelBand, and Fitbit are equipped with accelerometers.  Using these devices, it is now possible to collect a large amount of data about personal activity relatively inexpensively. This report uses a dataset collected from the accelerometers to determine whether personal activities are performed correctly.  The goal is to investigate a best machine learning algorithm to predict how well the pseronal activities are performed.
+
+This investigation started with data cleansing to remove NA values from the training dataset and then prelimanary feature selection to remove near-zero values, which led in a reduction of the number of features from 159 to 53 as a result.  
+
+The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency.  An outlier observation was identified and removed from the dataset as a result.  Also, the analysis indicates high dependecies among features.
+
+Based on the result of the exploratory analysis, a prectitive model is proposed which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The proposed prection model uses the linear discriminant analysis without pre-processing using principal component analysis.  The model accuracy and kappa using the cleansed training dataset is 0.71 and 0.63, respectively.
+
+## Data Cleansing ##
+The data used in this report are collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.  They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+It is noticed that some features in the dataaet contain more than 97% of the observations with NA values.  The features containing such high percentage of NA values are not useful for machine learning. These features are removed from the data frame using the following R statements.  With the removal, the updated dataset contains no NA values and no data imputation is required as a result.
+
+```{r}
+dat = read.csv("C:/Users/Huili/Downloads/pml-training.csv")
+namat <- is.na(dat)
+navec <- apply(namat,2,sum)
+navec <- navec / nrow(dat)
+nacol <- navec > 0.97
+nnacol <- subset(nacol, nacol == FALSE)
+nnadat <- dat[,names(nnacol)]
+```
+
+
+## Preliminary Feature Selection ##
+It is also noticed that the some features have near-zero variations and therefore not useful for matching learning either.  These features are removed by using the following R statements.
+
+```{r message=FALSE}
+library(caret)
+nzv <- nearZeroVar(nnadat,saveMetrics = TRUE)
+nnzvcol <- subset(nzv, nzv == FALSE)
+datTidy <- nnadat[,row.names(nnzvcol)]
+```
+
+
+The classe feature has possible values of A, B, C, D, and E as defined in this [web page](http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises).  These possible values represent different ways of weight lifting which have nothing to do with names of the weigh lifters, timestamps and sequence of observations.  The following five features will therefore not be included for machine learning: *X*, *user_name*, *raw_timestamp_part_1*, *raw_timestamp_part_2*, and *cvtd_timestamp*.  By exclusion of these five features, the tidy dataset is reduced by using the following R statements.
+
+```{r}
+datTidy <- datTidy[,!(colnames(datTidy) %in% c('X','user_name','raw_timestamp_part_1','raw_timestamp_part_2','cvtd_timestamp'))]
+
+```
+
+The remaining `r ncol(datTidy)-1` features out of the original `r ncol(dat)-1` that will be used for machine learning are
+```{r}
+names(datTidy[,colnames(datTidy) != 'classe'])
+```
+
+## Exploratory Analysis ##
+
+The data for each features is further examined to see its skewness.  The features with high sknewness are singled out by the following R statements
+
+```{r message=FALSE}
+library(e1071)
+```
+
+```{r}
+datSkewness <- apply(datTidy[,names(datTidy) != 'classe'],2,skewness)
+datSkewness[datSkewness > 3]
+```
+
+Normal Q-Q plots of these features as follows indicate that the sknewness is due to an outliner observation.
+```{r}
+par(mfrow=c(2,2))
+qqnorm(datTidy$gyros_dumbbell_y,main="Normal Q-Q Plot for gyros_dumbbell_y")
+qqnorm(datTidy$gyros_dumbbell_z,main="Normal Q-Q Plot for gyros_dumbbell_z")
+qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_y")
+qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_z")
+```
+
+The outlier observation can be identified by using summary and which commands as follows:
+```{r}
+summ <- summary(datTidy$gyros_dumbbell_y)
+summ
+outlierRowIndex <- which(datTidy$gyros_dumbbell_y == summ[6],arr.ind = TRUE)
+outlierRowIndex
+summ <- summary(datTidy$gyros_dumbbell_z)
+summ
+outlierRowIndex <- which(datTidy$gyros_dumbbell_z == summ[6],arr.ind = TRUE)
+outlierRowIndex
+summ <- summary(datTidy$gyros_forearm_y)
+summ
+outlierRowIndex <- which(datTidy$gyros_forearm_y == summ[6],arr.ind = TRUE)
+outlierRowIndex
+summ <- summary(datTidy$gyros_forearm_z)
+summ
+outlierRowIndex <- which(datTidy$gyros_forearm_z == summ[6],arr.ind = TRUE)
+outlierRowIndex
+```
+
+After removing the outliner observation, the normal Q-Q plots become
+```{r}
+datTidy <- datTidy[-outlierRowIndex,]
+par(mfrow=c(2,2))
+qqnorm(datTidy$gyros_dumbbell_y,main="Normal Q-Q Plot for gyros_dumbbell_y")
+qqnorm(datTidy$gyros_dumbbell_z,main="Normal Q-Q Plot for gyros_dumbbell_z")
+qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_y")
+qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_z")
+```
+
+In addition to the skewness study of the features, correlations among them are computed and examined using the following R statements.
+```{r}
+featMat <- datTidy[,colnames(datTidy) != 'classe']
+featCorMat <- cor(featMat)
+hicor_p9 <- which(featCorMat < 1 & featCorMat > 0.9, arr.ind = TRUE)
+hicor_p8 <- which(featCorMat < 1 & featCorMat > 0.8, arr.ind = TRUE)
+hicor_p7 <- which(featCorMat < 1 & featCorMat > 0.7, arr.ind = TRUE)
+hicor_p6 <- which(featCorMat < 1 & featCorMat > 0.6, arr.ind = TRUE)
+```
+
+The numbers of highly correlated pairs of features with their correlation coefficients equal to 0.9, 0.8, 0.7 and 0.6 are `r nrow(hicor_p9)/2`, `r nrow(hicor_p8)/2`, `r nrow(hicor_p7)/2` and `r nrow(hicor_p6)/2` out of the total number of features `r nrow(featCorMat)`, respectively.  In other words, a high portion of features are highly correlated.
+
+The highly correlated features indicate there might be a subset of features explaining most variations of the observations.  The principal component analysis is used to validate the indication.  The analysis is shown in the following.
+```{r}
+prComp <- prcomp(featMat)
+plot(prComp$sdev, ylab="Standard Deviation")
+```
+
+The plot of standard deviation versus component index suggests that the number of principal components to use for machine training is much less that the number of features.
+
+## Predictive Modeling ##
+The exploratory analysis only touches few aspects of the data.  The characteristics of the data are not fully explored.  Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model.  However, the non-parametric approaches are computationally expensive.  With limited computational resources available for this investigation, the linear discrimant analysis is used for predictive modeling.
+
+Linear discrimenant analyses with and without principal component analysis are performed and the result of the analyses is given in the following
+```{r}
+set.seed(340091)
+ldaFit <- train(classe~.,method="lda",data=datTidy,trControl=trainControl(method="repeatedcv",savePredictions = TRUE))
+ldaFit
+confusionMatrix(ldaFit$pred$pred,ldaFit$pred$obs)
+ldaPcaFit <- train(classe~.,method="lda",data=datTidy,preProcess="pca",trControl=trainControl(method="repeatedcv",savePredictions = TRUE))
+ldaPcaFit
+confusionMatrix(ldaPcaFit$pred$pred,ldaFit$pred$obs)
+```
+
+The linear discriminant analysis without principal compoent analysis appear to be better than the one with principal component analysis in terms of both accuracy and kappa.
+
+## Conclusion ##
+The analysis performed in this report suggests the linear discriminant analysis method for machine learning for predicting personal activities in the computational environment with limited resources.  The method uses the following features to predict the *classe* outcome variables
+
+```{r}
+names(datTidy[,colnames(datTidy) != 'classe'])
+```
+
+The prediction model has accuracy and kappa with the value of 0.71 and 0.63, respectively.  The cross-validation accuracy is 0.71.  In other words, the cross-validation error rate is 0.29, which is an estimate of out-of-sample error rate.
