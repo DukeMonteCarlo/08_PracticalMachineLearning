@@ -3,18 +3,18 @@
 *Author: Huili Wang*
 
 ## Overview ##
-Devices such as Jawbone Up, Nike FuelBand, and Fitbit are equipped with accelerometers.  Using these devices, it is now possible to collect a large amount of data about personal activity relatively inexpensively. This report uses a dataset collected from the accelerometers to determine whether personal activities are performed correctly.  The goal is to investigate a best machine learning algorithm to predict how well the pseronal activities are performed.
+Devices such as Jawbone Up, Nike FuelBand, and Fitbit are equipped with accelerometers.  Using these devices, it is now possible to collect a large amount of data about personal activity relatively inexpensively. This report uses a dataset collected from the accelerometers to determine whether personal activities are performed correctly.  The goal is to investigate the best machine learning algorithm to predict how well the pseronal activities are performed.
 
-This investigation started with data cleansing to remove NA values from the training dataset and then prelimanary feature selection to remove near-zero values, which led in a reduction of the number of features from 159 to 53 as a result.  
+This investigation started with data cleansing to remove NA values from the training dataset and then performed prelimanary feature selection to remove near-zero values, which led in a reduction of the number of features from 159 to 53 as a result.  
 
-The feature reduction was followed by an exploratory analysis focusing on data skewness and feature interdependency.  An outlier observation was identified and removed from the dataset as a result.  Also, the analysis indicates high dependecies among features.
+The feature reduction was followed by an exploratory analysis focusing on two aspects of data: skewness and feature interdependency.  An outlier observation was identified and removed from the dataset as a result.  Also, the analysis indicates high dependecies among features.
 
-Based on the result of the exploratory analysis, a prectitive model is built which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The prection model uses the random forest method with a value of the tuning parameter *mtry* equal to 8.  The number of features used to build the model is 53.  The model accuracy and kappa are 0.999 and 0.998, respectively.
+Based on the result of the exploratory analysis, a prectitive model is built which strikes the balance of accuracy, kappa (a measure of concordance) and computational performance in an computational environment with limited computational resources.  The prective model uses the random forest method with the tuning parameter *mtry* set to 8.  The number of features used to build the model is 53.  The model accuracy and kappa are 0.999 and 0.998, respectively.
 
 ## Data Cleansing ##
 The data used in this report are collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.  They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
 
-It is noticed that some features in the dataaet contain more than 97% of the observations with NA values.  The features containing such high percentage of NA values are not useful for machine learning. These features are removed from the data frame using the following R statements.  With the removal, the updated dataset contains no NA values and no data imputation is required as a result.
+It is noticed that some features in the dataset contain more than 97% of NA values in all observations.  The features containing such high percentage of NA values are not useful for machine learning and hence removed from the data frame using the following R statements.  With the removal, the updated dataset contains no NA values and no data imputation is required as a result.
 
 ```{r}
 dat = read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
@@ -28,7 +28,7 @@ nnadat <- dat[,names(nnacol)]
 
 
 ## Preliminary Feature Selection ##
-It is also noticed that the some features have near-zero variations and therefore not useful for matching learning either.  These features are removed by using the following R statements.
+It is also noticed that the some features have near-zero variations which are not useful for matching learning either.  These features are removed by the following R statements.
 
 ```{r message=FALSE}
 library(caret)
@@ -38,21 +38,20 @@ datTidy <- nnadat[,row.names(nnzvcol)]
 ```
 
 
-The classe feature has possible values of A, B, C, D, and E as defined in this [web page](http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises).  These possible values represent different ways of weight lifting which have nothing to do with names of the weigh lifters, timestamps and sequence of observations.  The following five features will therefore not be included for machine learning: *X*, *user_name*, *raw_timestamp_part_1*, *raw_timestamp_part_2*, and *cvtd_timestamp*.  By exclusion of these five features, the tidy dataset is reduced by using the following R statements.
+The *classe* feature has possible values of A, B, C, D, and E as defined in this [web page](http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises).  These possible values represent different ways of weight lifting which have nothing to do with names of the weigh lifters, timestamps and sequence of observations.  Therefore, the following five features are excluded for machine learning: *X*, *user_name*, *raw_timestamp_part_1*, *raw_timestamp_part_2*, and *cvtd_timestamp*.  Excluding these five features, the tidy dataset is further reduced by the following R statements.
 
 ```{r}
 datTidy <- datTidy[,!(colnames(datTidy) %in% c('X','user_name','raw_timestamp_part_1','raw_timestamp_part_2','cvtd_timestamp'))]
-
 ```
 
-The remaining `r ncol(datTidy)-1` features out of the original `r ncol(dat)-1` that will be used for machine learning are
+The remaining `r ncol(datTidy)-1` features used for machine learning which are reduced from the original total of `r ncol(dat)-1` ones are
 ```{r}
 names(datTidy[,colnames(datTidy) != 'classe'])
 ```
 
 ## Exploratory Analysis ##
 
-The data for each features is further examined to see its skewness.  The features with high sknewness are singled out by the following R statements
+The data for each features is further examined on its skewness.  The features with high sknewness are singled out by the following R statements
 
 ```{r message=FALSE}
 library(e1071)
@@ -72,7 +71,7 @@ qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_y")
 qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_z")
 ```
 
-The outlier observation can be identified by using summary and which commands as follows:
+The outlier observation is identified by using the *summary* and *which* R commands as follows:
 ```{r}
 summ <- summary(datTidy$gyros_dumbbell_y)
 summ
@@ -102,7 +101,7 @@ qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_y")
 qqnorm(datTidy$gyros_forearm_y,main="Normal Q-Q Plot for gyros_forearm_z")
 ```
 
-In addition to the skewness study of the features, correlations among them are computed and examined using the following R statements.
+In addition to the skewness study of the features, correlations among them are also examined.  The correlations are computed by using the following R statements.
 ```{r}
 featMat <- datTidy[,colnames(datTidy) != 'classe']
 featCorMat <- cor(featMat)
@@ -112,20 +111,20 @@ hicor_p7 <- which(featCorMat < 1 & featCorMat > 0.7, arr.ind = TRUE)
 hicor_p6 <- which(featCorMat < 1 & featCorMat > 0.6, arr.ind = TRUE)
 ```
 
-The numbers of highly correlated pairs of features with their correlation coefficients equal to 0.9, 0.8, 0.7 and 0.6 are `r nrow(hicor_p9)/2`, `r nrow(hicor_p8)/2`, `r nrow(hicor_p7)/2` and `r nrow(hicor_p6)/2` out of the total number of features `r nrow(featCorMat)`, respectively.  In other words, a high portion of features are highly correlated.
+The correlation analysis indicates that the numbers of highly correlated pairs of features with their correlation coefficients equal to 0.9, 0.8, 0.7 and 0.6 are `r nrow(hicor_p9)/2`, `r nrow(hicor_p8)/2`, `r nrow(hicor_p7)/2` and `r nrow(hicor_p6)/2` out of the total number of features `r nrow(featCorMat)`, respectively.  In other words, a large portion of features are highly correlated.
 
-The highly correlated features indicate there might be a subset of features explaining most variations of the observations.  The principal component analysis is used to validate the indication.  The analysis is shown in the following.
+The highly correlated features transpires that there might be a subset of features explaining most variations of the observations.  The principal component analysis is employed to examine the transpiration.  The result of the analysis is summarized in the following plot.
 ```{r}
 prComp <- prcomp(featMat)
 plot(prComp$sdev, ylab="Standard Deviation")
 ```
 
-The plot of standard deviation versus component index suggests that the number of principal components to use for machine training is much less that the number of features.
+The plot of *standard deviation* versus *component index* confirms that the number of principal components explaining all variations is much less that the number of features.
 
 ## Predictive Modeling ##
-The exploratory analysis only touches few aspects of the data.  The characteristics of the data are not fully explored.  Without fully understanding the characteristics of the data, it is advantageous to employ non-parametric approaches to build a predictive model.
+The exploratory analysis performed in the previous section only touched few aspects of the data.  Without fully understanding the characteristics of the data, it is advantageous to employ the non-parametric approach to build a predictive model.
 
-The Random Forest method is performed and the result of the modeling is given in the following
+The Random Forest method is chosen among others and the result of the modeling is given in the following
 ```{r}
 set.seed(340091)
 rfFit <- train(classe~.,method="rf",data=datTidy,trControl=trainControl(p=0.5,method="cv",savePredictions = TRUE),tuneGrid=data.frame(mtry=8))
@@ -133,13 +132,35 @@ rfFit
 confusionMatrix(rfFit$pred$pred,rfFit$pred$obs)
 ```
 
-The computation time to build the model is about 12 minutes on my laptop computer with Intel CORE i5 running Windows 10.
+The computation time to build the model is about 12 minutes on a Dell Inspiron 15 laptop computer with Intel CORE i5 running Windows 10.
+
+## Prediction for Project Submission ##
+Project submission requires predictions to be generated from a prescribed set of test data by the predictive model developed in this report.  The predictions are computed by using the following R statements
+```{r}
+tdat = read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
+namat <- is.na(tdat)
+navec <- apply(namat,2,sum)
+navec <- navec / nrow(dat)
+nacol <- navec > 0.97
+nnacol <- subset(nacol, nacol == FALSE)
+nnatdat <- tdat[,names(nnacol)]
+nzv <- nearZeroVar(nnatdat,saveMetrics = TRUE)
+nnzvcol <- subset(nzv, nzv == FALSE)
+tdatTidy <- nnatdat[,row.names(nnzvcol)]
+tdatTidy <- tdatTidy[,!(colnames(tdatTidy) %in% c('X','user_name','raw_timestamp_part_1','raw_timestamp_part_2','cvtd_timestamp'))]
+tpred <- predict(rfFit,newdata=tdatTidy)
+```
+
+The predictive values are
+```{r}
+tpred
+```
 
 ## Conclusion ##
-The analysis performed in this report suggests the linear discriminant analysis method for machine learning for predicting personal activities in the computational environment with limited resources.  The method uses the following features to predict the *classe* outcome variables
+The analysis performed in this report suggests the random forest method as the machine learning model for predicting personal activities in the computational environment with limited resources is accurate and consistent.  The model uses the following features to predict the *classe* outcome variable.
 
 ```{r}
 names(datTidy[,colnames(datTidy) != 'classe'])
 ```
 
-The prediction model has accuracy and kappa with the value of 0.999 and 0.998, respectively.  The cross-validation accuracy is 0.999.  In other words, the cross-validation error rate is 0.001, which is an estimate of out-of-sample error rate.
+The predictive model has 0.999 accuracy and 0.998 kappa concordance measurement.  The cross-validation accuracy is 0.999.  In other words, the cross-validation error rate is 0.001, which is also a good estimate of the out-of-sample error rate.
