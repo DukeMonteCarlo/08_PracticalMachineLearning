@@ -1,3 +1,6 @@
+---
+output: html_document
+---
 # Machine Learning for Prediction of Personal Activities #
 
 *Author: Huili Wang*
@@ -140,7 +143,7 @@ Project submission requires predictions to be generated from a prescribed set of
 tdat = read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
 namat <- is.na(tdat)
 navec <- apply(namat,2,sum)
-navec <- navec / nrow(dat)
+navec <- navec / nrow(tdat)
 nacol <- navec > 0.97
 nnacol <- subset(nacol, nacol == FALSE)
 nnatdat <- tdat[,names(nnacol)]

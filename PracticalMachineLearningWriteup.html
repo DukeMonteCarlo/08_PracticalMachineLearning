@@ -245,7 +245,7 @@ rfFit &lt;- train(classe~.,method=&quot;rf&quot;,data=datTidy,trControl=trainCon
 <pre class="r"><code>tdat = read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;)
 namat &lt;- is.na(tdat)
 navec &lt;- apply(namat,2,sum)
-navec &lt;- navec / nrow(dat)
+navec &lt;- navec / nrow(tdat)
 nacol &lt;- navec &gt; 0.97
 nnacol &lt;- subset(nacol, nacol == FALSE)
 nnatdat &lt;- tdat[,names(nnacol)]
